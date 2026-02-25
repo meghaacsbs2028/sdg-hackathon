@@ -13,8 +13,17 @@ export default function StudentList() {
   const [expanded, setExpanded] = useState({});
 
   useEffect(() => {
-    fetch("http://localhost:8000/students")
+    const token = localStorage.getItem("access_token");
+    fetch("http://localhost:8000/students", {
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+    })
       .then((res) => {
+        if (res.status === 401) {
+          localStorage.removeItem("access_token");
+          localStorage.removeItem("user");
+          window.location.href = "/login";
+          throw new Error("Session expired");
+        }
         if (!res.ok) throw new Error("Failed to fetch students");
         return res.json();
       })

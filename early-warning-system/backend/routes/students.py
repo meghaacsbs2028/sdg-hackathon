@@ -4,12 +4,14 @@ import random
 import uuid
 
 import numpy as np
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from database.db import get_db
 from models.student import Student
+from auth.dependencies import get_current_user, require_role
+from models.user import User
 
 # ── Load ML model (same bundle used by predictions.py) ───────────────────────
 MODEL_PATH = os.path.join(os.path.dirname(__file__), "..", "ml", "risk_model.pkl")
@@ -89,8 +91,11 @@ def _student_to_dict(student: Student) -> dict:
 
 
 @router.get("/")
-def get_students(db: Session = Depends(get_db)):
-    """Return all students with live ML risk predictions."""
+def get_students(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_role("admin", "faculty")),
+):
+    """Return all students with live ML risk predictions. (admin/faculty only)"""
     students = db.query(Student).all()
     return {
         "count": len(students),
@@ -99,17 +104,30 @@ def get_students(db: Session = Depends(get_db)):
 
 
 @router.get("/{student_id}")
-def get_student(student_id: str, db: Session = Depends(get_db)):
-    """Return a single student by student_id with ML prediction."""
+def get_student(
+    student_id: str,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Return a single student. Students can only view their own record."""
+    # Students can only access their own record (matched by email)
     student = db.query(Student).filter(Student.student_id == student_id).first()
     if not student:
-        return {"error": f"Student '{student_id}' not found"}
+        raise HTTPException(status_code=404, detail=f"Student '{student_id}' not found")
+
+    if current_user.role == "student" and student.email != current_user.email:
+        raise HTTPException(status_code=403, detail="You can only view your own record")
+
     return _student_to_dict(student)
 
 
 @router.post("/")
-def create_student(data: StudentCreate, db: Session = Depends(get_db)):
-    """Create a new student record in the database."""
+def create_student(
+    data: StudentCreate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_role("admin", "faculty")),
+):
+    """Create a new student record. (admin/faculty only)"""
     sid = f"STU-{uuid.uuid4().hex[:8].upper()}"
     email = f"{data.name.lower().replace(' ', '.')}_{sid[-4:]}@university.edu"
 
@@ -149,8 +167,11 @@ def _rand(lo: float, hi: float) -> float:
 
 
 @router.post("/seed")
-def seed_students(db: Session = Depends(get_db)):
-    """Delete all students and insert 30 smart-seeded records."""
+def seed_students(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_role("admin")),
+):
+    """Delete all students and insert 30 smart-seeded records. (admin only)"""
     db.query(Student).delete()
     db.commit()
 

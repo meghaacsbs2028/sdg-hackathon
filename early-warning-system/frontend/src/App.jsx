@@ -1,14 +1,16 @@
-import { useState } from 'react'
-import Navbar from './components/Navbar'
-import Dashboard from './pages/Dashboard'
-import StudentList from './pages/StudentList'
+import { useState } from "react";
+import { Routes, Route, Navigate } from "react-router-dom";
+import Navbar from "./components/Navbar";
+import Dashboard from "./pages/Dashboard";
+import StudentList from "./pages/StudentList";
+import Login from "./pages/Login";
 
 const tabs = [
   { id: "dashboard", label: "🎯 Predict Risk" },
   { id: "students", label: "📋 Student List" },
 ];
 
-function App() {
+function ProtectedApp() {
   const [activeTab, setActiveTab] = useState("dashboard");
 
   return (
@@ -31,7 +33,29 @@ function App() {
       {activeTab === "dashboard" && <Dashboard />}
       {activeTab === "students" && <StudentList />}
     </>
-  )
+  );
+}
+
+function RequireAuth({ children }) {
+  const token = localStorage.getItem("access_token");
+  if (!token) return <Navigate to="/login" replace />;
+  return children;
+}
+
+function App() {
+  return (
+    <Routes>
+      <Route path="/login" element={<Login />} />
+      <Route
+        path="/*"
+        element={
+          <RequireAuth>
+            <ProtectedApp />
+          </RequireAuth>
+        }
+      />
+    </Routes>
+  );
 }
 
 const styles = {
@@ -60,4 +84,4 @@ const styles = {
   },
 };
 
-export default App
+export default App;

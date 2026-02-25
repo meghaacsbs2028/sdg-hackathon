@@ -2,8 +2,10 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from routes.students import router as students_router
 from routes.predictions import router as predictions_router
+from routes.auth import router as auth_router
 from database.db import engine, Base
 from models.student import Student  # noqa: F401  — ensures model is registered
+from models.user import User  # noqa: F401  — ensures model is registered
 
 app = FastAPI(
     title="Early Warning Student Monitoring System API",
@@ -21,6 +23,7 @@ app.add_middleware(
 )
 
 # Register route modules
+app.include_router(auth_router)
 app.include_router(students_router)
 app.include_router(predictions_router)
 
