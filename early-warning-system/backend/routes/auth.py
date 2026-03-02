@@ -16,7 +16,7 @@ class RegisterRequest(BaseModel):
     name: str
     email: EmailStr
     password: str
-    role: str = "student"  # admin / faculty / student
+    role: str = "student"  # admin / hod / faculty / student
 
 
 class LoginRequest(BaseModel):
@@ -27,9 +27,9 @@ class LoginRequest(BaseModel):
 # ── POST /auth/register ──────────────────────────────────────────────────────
 @router.post("/register", status_code=status.HTTP_201_CREATED)
 def register(data: RegisterRequest, db: Session = Depends(get_db)):
-    """Create a new user account."""
-    if data.role not in ("admin", "faculty", "student"):
-        raise HTTPException(status_code=400, detail="Role must be admin, faculty, or student")
+    """Create a new user account (public registration)."""
+    if data.role not in ("admin", "hod", "faculty", "student"):
+        raise HTTPException(status_code=400, detail="Role must be admin, hod, faculty, or student")
 
     existing = db.query(User).filter(User.email == data.email).first()
     if existing:
@@ -38,7 +38,7 @@ def register(data: RegisterRequest, db: Session = Depends(get_db)):
     user = User(
         name=data.name,
         email=data.email,
-        password=hash_password(data.password),
+        password_hash=hash_password(data.password),
         role=data.role,
     )
     db.add(user)
@@ -52,6 +52,7 @@ def register(data: RegisterRequest, db: Session = Depends(get_db)):
             "name": user.name,
             "email": user.email,
             "role": user.role,
+            "department_id": user.department_id,
         },
     }
 
@@ -61,7 +62,7 @@ def register(data: RegisterRequest, db: Session = Depends(get_db)):
 def login(data: LoginRequest, db: Session = Depends(get_db)):
     """Authenticate user and return JWT access token."""
     user = db.query(User).filter(User.email == data.email).first()
-    if not user or not verify_password(data.password, user.password):
+    if not user or not verify_password(data.password, user.password_hash):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid email or password",
@@ -81,5 +82,6 @@ def login(data: LoginRequest, db: Session = Depends(get_db)):
             "name": user.name,
             "email": user.email,
             "role": user.role,
+            "department_id": user.department_id,
         },
     }

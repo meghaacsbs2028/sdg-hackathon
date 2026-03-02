@@ -1,0 +1,3 @@
+name,email,password,role,department_code,roll_number,year,section,admission_year
+Rahul Joshi,rahul@test.com,pass123,student,CSE,CSE2024001,1,A,2024
+Priya Sharma,priya@test.com,pass123,student,ECE,ECE2024001,2,B,2023
