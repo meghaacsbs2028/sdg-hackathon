@@ -27,7 +27,6 @@ data = pd.DataFrame({
     "internal_marks":   np.random.randint(0,  101, N),
     "assignment_score": np.random.randint(0,  101, N),
     "lms_activity":     np.random.randint(0,  101, N),
-    "stress_score":     np.random.randint(0,  101, N),
 })
 
 # ── 2. Create at_risk label ───────────────────────────────────────────────────
@@ -35,8 +34,7 @@ data["at_risk"] = (
     (data["attendance"]       < 65) |
     (data["internal_marks"]   < 50) |
     (data["assignment_score"] < 50) |
-    (data["lms_activity"]     < 40) |
-    (data["stress_score"]     > 70)
+    (data["lms_activity"]     < 40)
 ).astype(int)
 
 print(f"Dataset shape : {data.shape}")
@@ -45,7 +43,7 @@ print(f"Safe count    : {(data['at_risk'] == 0).sum()} / {N}\n")
 
 # ── 3. Train Logistic Regression ──────────────────────────────────────────────
 FEATURES = ["attendance", "internal_marks", "assignment_score",
-            "lms_activity", "stress_score"]
+            "lms_activity"]
 
 X = data[FEATURES].values
 y = data["at_risk"].values

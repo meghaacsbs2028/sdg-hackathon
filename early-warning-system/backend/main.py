@@ -5,6 +5,7 @@ from routes.predictions import router as predictions_router
 from routes.auth import router as auth_router
 from routes.users import router as users_router
 from routes.departments import router as departments_router
+from routes.attendance import router as attendance_router
 from database.db import engine, Base
 
 # Import all models so SQLAlchemy registers them
@@ -12,6 +13,7 @@ from models.department import Department  # noqa: F401
 from models.user import User  # noqa: F401
 from models.student_profile import StudentProfile  # noqa: F401
 from models.academic_record import AcademicRecord  # noqa: F401
+from models.attendance import DailyAttendance  # noqa: F401
 
 app = FastAPI(
     title="Early Warning Student Monitoring System API",
@@ -34,6 +36,7 @@ app.include_router(users_router)
 app.include_router(departments_router)
 app.include_router(students_router)
 app.include_router(predictions_router)
+app.include_router(attendance_router)
 
 
 # ── Department seed data ──────────────────────────────────────────────────────

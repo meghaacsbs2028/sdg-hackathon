@@ -8,7 +8,7 @@ import {
   ClipboardList, FileText, FileCheck, Monitor, Brain,
   ShieldCheck, AlertTriangle, ShieldAlert, HelpCircle,
   LayoutDashboard, Search, Lightbulb, TrendingUp,
-  Crosshair, Calendar, Inbox, Loader2,
+  Crosshair, Calendar, Inbox, Loader2, Flame,
 } from "lucide-react";
 
 const fields = [
@@ -16,7 +16,6 @@ const fields = [
   { name: "internal_marks", label: "Internal Marks", min: 0, max: 100, icon: <FileText size={14} /> },
   { name: "assignment_score", label: "Assignment Score", min: 0, max: 100, icon: <FileCheck size={14} /> },
   { name: "lms_activity", label: "LMS Activity", min: 0, max: 100, icon: <Monitor size={14} /> },
-  { name: "stress_score", label: "Stress Score", min: 0, max: 100, icon: <Brain size={14} /> },
 ];
 
 const riskConfig = {
@@ -133,7 +132,6 @@ function PersonalDashboard() {
               { label: "Internal Marks", value: student.internal_marks, icon: <FileText size={18} />, color: "#2563eb" },
               { label: "Assignment", value: student.assignment_score, icon: <FileCheck size={18} />, color: "#7c3aed" },
               { label: "LMS Activity", value: student.lms_activity, icon: <Monitor size={18} />, color: "#0891b2" },
-              { label: "Stress Score", value: student.stress_score, icon: <Brain size={18} />, color: "#dc2626" },
             ].map((m) => (
               <div key={m.label} style={pStyles.metricCard}>
                 <span style={{ ...pStyles.metricIcon, color: m.color }}>{m.icon}</span>
@@ -142,6 +140,29 @@ function PersonalDashboard() {
               </div>
             ))}
           </div>
+
+          {/* Streak Card */}
+          {student.streak >= 1 && (
+            <div style={{
+              padding: "0.85rem 1.25rem", marginBottom: "1rem",
+              background: "linear-gradient(135deg, #fef3c7, #fffbeb)",
+              border: "1px solid #fde68a", borderLeft: "4px solid #f59e0b",
+              borderRadius: "var(--radius-md)", boxShadow: "var(--shadow-sm)",
+              display: "flex", alignItems: "center", gap: "0.85rem",
+            }}>
+              <Flame size={28} color="#f59e0b" fill="#fbbf24" />
+              <div>
+                <div style={{ fontWeight: 800, fontSize: "1.05rem", color: "#92400e" }}>
+                  🔥 {student.streak}-day present streak!
+                </div>
+                <div style={{ fontSize: "0.82rem", color: "#b45309", marginTop: 2 }}>
+                  {student.streak >= 10 ? "Incredible! You're on fire — keep it going!" :
+                   student.streak >= 5 ? "Great consistency! Keep up the momentum!" :
+                   "Nice start! Every day counts toward your goals."}
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Risk Drivers */}
           {student.risk_drivers?.length > 0 && (
@@ -192,11 +213,10 @@ function PerformanceTrend({ riskScore, academicHistory }) {
     if (academicHistory.length > 0) {
       return academicHistory.slice().reverse().map((rec) => {
         const avg = (
-          (100 - (rec.attendance || 0)) * 0.3 +
-          (100 - (rec.internal_marks || 0)) * 0.2 +
+          (100 - (rec.attendance || 0)) * 0.35 +
+          (100 - (rec.internal_marks || 0)) * 0.25 +
           (100 - (rec.assignment_score || 0)) * 0.2 +
-          (100 - (rec.lms_activity || 0)) * 0.15 +
-          (rec.stress_score || 0) * 0.15
+          (100 - (rec.lms_activity || 0)) * 0.2
         );
         return { period: rec.term, score: +Math.min(100, Math.max(0, avg)).toFixed(1) };
       });
@@ -233,7 +253,7 @@ export default function Dashboard({ role, user }) {
   if (role === "student") return <PersonalDashboard />;
 
   const [form, setForm] = useState({
-    attendance: "", internal_marks: "", assignment_score: "", lms_activity: "", stress_score: "",
+    attendance: "", internal_marks: "", assignment_score: "", lms_activity: "",
   });
   const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(false);

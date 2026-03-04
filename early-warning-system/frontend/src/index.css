@@ -193,6 +193,26 @@ input:focus, select:focus, textarea:focus {
   to   { opacity: 1; transform: scale(1); }
 }
 
+@keyframes popBtn {
+  0%   { transform: scale(1.15); }
+  40%  { transform: scale(1.45); }
+  70%  { transform: scale(1.05); }
+  100% { transform: scale(1.15); }
+}
+
+@keyframes shakeBtn {
+  0%, 100% { transform: scale(1.15) translateX(0); }
+  20%      { transform: scale(1.15) translateX(-3px); }
+  40%      { transform: scale(1.15) translateX(3px); }
+  60%      { transform: scale(1.15) translateX(-2px); }
+  80%      { transform: scale(1.15) translateX(2px); }
+}
+
+@keyframes floatUp {
+  0%   { opacity: 1; transform: translateX(-50%) translateY(0) scale(1); }
+  100% { opacity: 0; transform: translateX(-50%) translateY(-18px) scale(1.4); }
+}
+
 /* ── Utility Classes ────────────────────────────────────────────────────────── */
 .fade-in     { animation: fadeIn 0.3s ease-out; }
 .fade-in-up  { animation: fadeInUp 0.4s ease-out; }

@@ -33,7 +33,6 @@ class StudentInput(BaseModel):
     internal_marks: float
     assignment_score: float
     lms_activity: float
-    stress_score: float
 
 
 def _compute_prediction(features_dict: dict) -> dict:
@@ -107,7 +106,6 @@ def predict_for_student(
         "internal_marks": latest.internal_marks,
         "assignment_score": latest.assignment_score,
         "lms_activity": latest.lms_activity,
-        "stress_score": latest.stress_score,
     }
 
     result = _compute_prediction(features)

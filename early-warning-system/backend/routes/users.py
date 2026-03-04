@@ -33,6 +33,17 @@ class CreateUserRequest(BaseModel):
     admission_year: Optional[int] = None
 
 
+class UpdateUserRequest(BaseModel):
+    name: Optional[str] = None
+    email: Optional[EmailStr] = None
+    role: Optional[str] = None
+    department_id: Optional[int] = None
+    roll_number: Optional[str] = None
+    year: Optional[int] = None
+    section: Optional[str] = None
+    admission_year: Optional[int] = None
+
+
 def _user_to_dict(user: User) -> dict:
     result = {
         "id": user.id,
@@ -186,6 +197,71 @@ def delete_user(
     db.commit()
 
     return {"message": f"User '{user.name}' deleted successfully"}
+
+
+# ── PUT /users/{id} ──────────────────────────────────────────────────────────
+@router.put("/{user_id}")
+def update_user(
+    user_id: int,
+    data: UpdateUserRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_role("admin", "hod", "faculty")),
+):
+    """Update a user's registration details.
+    Admin: any user. HOD: faculty/students in own dept. Faculty: students in own dept."""
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    # ── access control ────────────────────────────────────────────────────
+    if current_user.role == "faculty":
+        if user.role != "student":
+            raise HTTPException(status_code=403, detail="Faculty can only edit students")
+        if user.department_id != current_user.department_id:
+            raise HTTPException(status_code=403, detail="Faculty can only edit students in own department")
+
+    if current_user.role == "hod":
+        if user.role in ("admin", "hod"):
+            raise HTTPException(status_code=403, detail="HOD cannot edit admin or HOD users")
+        if user.department_id != current_user.department_id:
+            raise HTTPException(status_code=403, detail="HOD can only edit users in own department")
+
+    # ── email uniqueness check ────────────────────────────────────────────
+    if data.email and data.email != user.email:
+        existing = db.query(User).filter(User.email == data.email).first()
+        if existing:
+            raise HTTPException(status_code=400, detail="Email already in use")
+
+    # ── update User fields ────────────────────────────────────────────────
+    if data.name is not None:
+        user.name = data.name
+    if data.email is not None:
+        user.email = data.email
+    if data.department_id is not None:
+        dept = db.query(Department).filter(Department.id == data.department_id).first()
+        if not dept:
+            raise HTTPException(status_code=400, detail="Department not found")
+        user.department_id = data.department_id
+
+    # ── update StudentProfile fields (if exists) ─────────────────────────
+    profile = user.student_profile
+    if profile:
+        if data.roll_number is not None:
+            profile.roll_number = data.roll_number
+            profile.name = user.name  # keep in sync
+        if data.year is not None:
+            profile.year = data.year
+        if data.section is not None:
+            profile.section = data.section
+        if data.admission_year is not None:
+            profile.admission_year = data.admission_year
+        if data.name is not None:
+            profile.name = data.name
+
+    db.commit()
+    db.refresh(user)
+
+    return {"message": "User updated successfully", "user": _user_to_dict(user)}
 
 
 # ── POST /users/upload (CSV bulk-create) ──────────────────────────────────────

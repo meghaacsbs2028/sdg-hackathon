@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Shield, Mail, Lock, ArrowRight, Loader2, AlertTriangle, GraduationCap } from "lucide-react";
+import { Mail, Lock, ArrowRight, Loader2, AlertTriangle, GraduationCap } from "lucide-react";
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -56,7 +56,7 @@ export default function Login() {
         {/* Logo & Branding */}
         <div style={styles.brandSection}>
           <div style={styles.logoCircle}>
-            <Shield size={28} color="#fff" strokeWidth={2.2} />
+            <img src="/favicon.png" alt="ScholarSafe Logo" width="72" height="56" />
           </div>
           <h1 style={styles.brandName}>ScholarSafe</h1>
           <p style={styles.brandTag}>AI-Powered Student Risk Intelligence</p>

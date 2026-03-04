@@ -63,6 +63,15 @@ export async function deleteUser(userId) {
   return handleResponse(res);
 }
 
+export async function updateUser(userId, data) {
+  const res = await fetch(`${BASE_URL}/users/${userId}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json", ...authHeaders() },
+    body: JSON.stringify(data),
+  });
+  return handleResponse(res);
+}
+
 // ── Students (StudentProfile) ─────────────────────────────────────────────────
 export async function fetchStudents() {
   const res = await fetch(`${BASE_URL}/students/`, {
@@ -145,6 +154,58 @@ export async function predictRisk(data) {
 
 export async function predictForStudent(profileId) {
   const res = await fetch(`${BASE_URL}/predictions/student/${profileId}`, {
+    headers: { ...authHeaders() },
+  });
+  return handleResponse(res);
+}
+
+// ── Attendance ────────────────────────────────────────────────────────────────
+export async function fetchAttendance(date) {
+  const params = date ? `?date=${date}` : "";
+  const res = await fetch(`${BASE_URL}/attendance/${params}`, {
+    headers: { ...authHeaders() },
+  });
+  return handleResponse(res);
+}
+
+export async function saveAttendance(date, records) {
+  const res = await fetch(`${BASE_URL}/attendance/`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...authHeaders() },
+    body: JSON.stringify({ date, records }),
+  });
+  return handleResponse(res);
+}
+
+export async function fetchAttendanceSummary() {
+  const res = await fetch(`${BASE_URL}/attendance/summary`, {
+    headers: { ...authHeaders() },
+  });
+  return handleResponse(res);
+}
+
+export async function fetchDefaulters(threshold = 75) {
+  const res = await fetch(`${BASE_URL}/attendance/defaulters?threshold=${threshold}`, {
+    headers: { ...authHeaders() },
+  });
+  return handleResponse(res);
+}
+
+export async function fetchAttendanceHistory({ year, section } = {}) {
+  const params = new URLSearchParams();
+  if (year != null) params.set("year", year);
+  if (section != null) params.set("section", section);
+  const res = await fetch(`${BASE_URL}/attendance/history?${params}`, {
+    headers: { ...authHeaders() },
+  });
+  return handleResponse(res);
+}
+
+export async function fetchRecentAttendance({ days = 14, year, section } = {}) {
+  const params = new URLSearchParams({ days });
+  if (year != null) params.set("year", year);
+  if (section != null) params.set("section", section);
+  const res = await fetch(`${BASE_URL}/attendance/recent?${params}`, {
     headers: { ...authHeaders() },
   });
   return handleResponse(res);

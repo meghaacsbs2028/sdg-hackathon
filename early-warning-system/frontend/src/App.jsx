@@ -4,6 +4,8 @@ import Dashboard from "./pages/Dashboard";
 import StudentList from "./pages/StudentList";
 import UserManagement from "./pages/UserManagement";
 import UploadRecords from "./pages/UploadRecords";
+import Attendance from "./pages/Attendance";
+import DefaultersReport from "./pages/DefaultersReport";
 import AdminLayout from "./layouts/AdminLayout";
 import HodLayout from "./layouts/HodLayout";
 import FacultyLayout from "./layouts/FacultyLayout";
@@ -64,6 +66,7 @@ export default function App() {
         <Route path="students" element={<StudentList role="admin" />} />
         <Route path="users" element={<UserManagement />} />
         <Route path="upload-records" element={<UploadRecords />} />
+        <Route path="defaulters" element={<DefaultersReport />} />
         <Route path="*" element={<Navigate to="/admin/dashboard" replace />} />
       </Route>
 
@@ -82,6 +85,8 @@ export default function App() {
         <Route path="students" element={<StudentList role="hod" />} />
         <Route path="users" element={<UserManagement />} />
         <Route path="upload-records" element={<UploadRecords />} />
+        <Route path="attendance" element={<Attendance />} />
+        <Route path="defaulters" element={<DefaultersReport />} />
         <Route path="*" element={<Navigate to="/hod/dashboard" replace />} />
       </Route>
 
@@ -100,6 +105,8 @@ export default function App() {
         <Route path="students" element={<StudentList role="faculty" />} />
         <Route path="users" element={<UserManagement />} />
         <Route path="upload-records" element={<UploadRecords />} />
+        <Route path="attendance" element={<Attendance />} />
+        <Route path="defaulters" element={<DefaultersReport />} />
         <Route path="*" element={<Navigate to="/faculty/dashboard" replace />} />
       </Route>
 

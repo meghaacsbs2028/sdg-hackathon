@@ -1,5 +1,5 @@
 import { useNavigate, NavLink } from "react-router-dom";
-import { Shield, LogOut } from "lucide-react";
+import { LogOut } from "lucide-react";
 
 export default function Navbar({ accentColor = "#1e3a5f", navLinks = [] }) {
   const navigate = useNavigate();
@@ -17,7 +17,7 @@ export default function Navbar({ accentColor = "#1e3a5f", navLinks = [] }) {
         <div style={styles.left}>
           <div style={styles.brand}>
             <div style={styles.logoMark}>
-              <Shield size={17} color="#fff" strokeWidth={2.5} />
+              <img src="/favicon.png" alt="ScholarSafe Logo" width="65" height="50" />
             </div>
             <span style={styles.brandName}>ScholarSafe</span>
           </div>
@@ -95,11 +95,11 @@ const styles = {
     width: 34,
     height: 34,
     borderRadius: "var(--radius-md)",
-    background: "rgba(255,255,255,0.12)",
+    
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
-    border: "1px solid rgba(255,255,255,0.1)",
+    
   },
   brandName: {
     fontSize: "1.05rem",

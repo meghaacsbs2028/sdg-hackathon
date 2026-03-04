@@ -215,7 +215,7 @@ function StudentDetail({ student, onRecordAdded }) {
   const [showAddForm, setShowAddForm] = useState(false);
   const [addForm, setAddForm] = useState({
     term: "", attendance: "", internal_marks: "",
-    assignment_score: "", lms_activity: "", stress_score: "",
+    assignment_score: "", lms_activity: "",
   });
   const [adding, setAdding] = useState(false);
   const [addMsg, setAddMsg] = useState("");
@@ -231,11 +231,10 @@ function StudentDetail({ student, onRecordAdded }) {
         internal_marks: parseFloat(addForm.internal_marks),
         assignment_score: parseFloat(addForm.assignment_score),
         lms_activity: parseFloat(addForm.lms_activity),
-        stress_score: parseFloat(addForm.stress_score),
       };
       const result = await addAcademicRecord(student.id, payload);
       setAddMsg(` Record added — Risk: ${result.risk_level} (${(result.risk_score * 100).toFixed(0)}%)`);
-      setAddForm({ term: "", attendance: "", internal_marks: "", assignment_score: "", lms_activity: "", stress_score: "" });
+      setAddForm({ term: "", attendance: "", internal_marks: "", assignment_score: "", lms_activity: "" });
       setShowAddForm(false);
       if (onRecordAdded) onRecordAdded();
     } catch (err) {
@@ -257,7 +256,6 @@ function StudentDetail({ student, onRecordAdded }) {
               { label: "Internal Marks", value: student.internal_marks },
               { label: "Assignment Score", value: student.assignment_score },
               { label: "LMS Activity", value: student.lms_activity },
-              { label: "Stress Score", value: student.stress_score },
             ].map((m) => (
               <div key={m.label} style={detailStyles.metricCard}>
                 <span style={detailStyles.metricVal}>{m.value}</span>
@@ -342,11 +340,6 @@ function StudentDetail({ student, onRecordAdded }) {
               <input type="number" required min="0" max="100" step="0.1" placeholder="0-100" value={addForm.lms_activity}
                 onChange={(e) => setAddForm({ ...addForm, lms_activity: e.target.value })} style={detailStyles.addInput} />
             </div>
-            <div style={detailStyles.addField}>
-              <label style={detailStyles.addLabel}>Stress Score</label>
-              <input type="number" required min="0" max="100" step="0.1" placeholder="0-100" value={addForm.stress_score}
-                onChange={(e) => setAddForm({ ...addForm, stress_score: e.target.value })} style={detailStyles.addInput} />
-            </div>
           </div>
           <button type="submit" disabled={adding} style={{ ...detailStyles.submitBtn, ...(adding ? { opacity: 0.6 } : {}) }}>
             {adding ? <><Loader2 size={14} style={{ marginRight: 4, animation: "spin 0.7s linear infinite" }} /> Saving...</> : <><Save size={14} style={{ marginRight: 4 }} /> Save Record</>}
@@ -366,7 +359,6 @@ function StudentDetail({ student, onRecordAdded }) {
                 <th style={detailStyles.histTh}>Marks</th>
                 <th style={detailStyles.histTh}>Assign.</th>
                 <th style={detailStyles.histTh}>LMS</th>
-                <th style={detailStyles.histTh}>Stress</th>
               </tr>
             </thead>
             <tbody>
@@ -377,7 +369,6 @@ function StudentDetail({ student, onRecordAdded }) {
                   <td style={detailStyles.histTd}>{r.internal_marks}</td>
                   <td style={detailStyles.histTd}>{r.assignment_score}</td>
                   <td style={detailStyles.histTd}>{r.lms_activity}</td>
-                  <td style={detailStyles.histTd}>{r.stress_score}</td>
                 </tr>
               ))}
             </tbody>

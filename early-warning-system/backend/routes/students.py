@@ -17,6 +17,7 @@ from models.student_profile import StudentProfile
 from models.academic_record import AcademicRecord
 from models.user import User
 from models.department import Department
+from models.attendance import DailyAttendance
 from auth.dependencies import get_current_user, require_role
 
 # ── Load ML model ─────────────────────────────────────────────────────────────
@@ -39,7 +40,6 @@ class AcademicRecordCreate(BaseModel):
     internal_marks: float
     assignment_score: float
     lms_activity: float
-    stress_score: float
 
 
 class StudentCreateRequest(BaseModel):
@@ -58,7 +58,6 @@ class StudentCreateRequest(BaseModel):
     internal_marks: Optional[float] = None
     assignment_score: Optional[float] = None
     lms_activity: Optional[float] = None
-    stress_score: Optional[float] = None
 
 
 # ── ML helpers ────────────────────────────────────────────────────────────────
@@ -105,8 +104,6 @@ def _get_interventions(record: AcademicRecord) -> list:
         suggestions.append("Complete pending assignments.")
     if (record.lms_activity or 0) < 40:
         suggestions.append("Increase LMS engagement.")
-    if (record.stress_score or 0) > 70:
-        suggestions.append("Refer to counseling support.")
     return suggestions
 
 
@@ -119,7 +116,6 @@ def _record_to_dict(record: AcademicRecord) -> dict:
         "internal_marks": record.internal_marks,
         "assignment_score": record.assignment_score,
         "lms_activity": record.lms_activity,
-        "stress_score": record.stress_score,
         "created_at": record.created_at.isoformat() if record.created_at else None,
     }
 
@@ -151,7 +147,6 @@ def _student_to_dict(profile: StudentProfile) -> dict:
             "internal_marks": latest.internal_marks,
             "assignment_score": latest.assignment_score,
             "lms_activity": latest.lms_activity,
-            "stress_score": latest.stress_score,
             "risk_score": prediction["risk_score"],
             "risk_level": prediction["risk_level"],
             "risk_drivers": prediction["risk_drivers"],
@@ -164,7 +159,6 @@ def _student_to_dict(profile: StudentProfile) -> dict:
             "internal_marks": None,
             "assignment_score": None,
             "lms_activity": None,
-            "stress_score": None,
             "risk_score": None,
             "risk_level": "Unknown",
             "risk_drivers": [],
@@ -216,7 +210,25 @@ def get_my_student_record(
     if not profile:
         raise HTTPException(status_code=404, detail="Your student profile has not been created yet. Contact your admin.")
 
-    return _student_to_dict(profile)
+    result = _student_to_dict(profile)
+
+    # Calculate attendance streak
+    rows = (
+        db.query(DailyAttendance.status)
+        .filter(DailyAttendance.student_id == profile.id)
+        .order_by(DailyAttendance.date.desc())
+        .limit(60)
+        .all()
+    )
+    streak = 0
+    for (st,) in rows:
+        if st in ("Present", "Late"):
+            streak += 1
+        else:
+            break
+    result["streak"] = streak
+
+    return result
 
 
 # ── GET /students/{id} ────────────────────────────────────────────────────────
@@ -307,7 +319,6 @@ def add_academic_record(
         internal_marks=data.internal_marks,
         assignment_score=data.assignment_score,
         lms_activity=data.lms_activity,
-        stress_score=data.stress_score,
     )
     db.add(record)
     db.commit()
@@ -385,7 +396,6 @@ def create_student(
             internal_marks=data.internal_marks or 0.0,
             assignment_score=data.assignment_score or 0.0,
             lms_activity=data.lms_activity or 0.0,
-            stress_score=data.stress_score or 0.0,
         )
         db.add(record)
 
@@ -404,7 +414,7 @@ def upload_csv(
 ):
     """Upload CSV to bulk-insert AcademicRecords.
 
-    CSV format: roll_number,term,attendance,internal_marks,assignment_score,lms_activity,stress_score
+    CSV format: roll_number,term,attendance,internal_marks,assignment_score,lms_activity
     Identifies students by (department_id + roll_number).
     Faculty/HOD use their own department. Admin must specify or it uses their department.
     Does NOT overwrite old records — always inserts new ones.
@@ -415,7 +425,7 @@ def upload_csv(
     contents = file.file.read()
     df = pd.read_csv(io.BytesIO(contents))
 
-    required = {"roll_number", "term", "attendance", "internal_marks", "assignment_score", "lms_activity", "stress_score"}
+    required = {"roll_number", "term", "attendance", "internal_marks", "assignment_score", "lms_activity"}
     missing = required - set(df.columns)
     if missing:
         raise HTTPException(status_code=400, detail=f"Missing columns: {', '.join(missing)}")
@@ -461,7 +471,6 @@ def upload_csv(
             internal_marks=float(row["internal_marks"]),
             assignment_score=float(row["assignment_score"]),
             lms_activity=float(row["lms_activity"]),
-            stress_score=float(row["stress_score"]),
         )
         db.add(record)
         records_added += 1
