@@ -40,6 +40,7 @@ class AcademicRecordCreate(BaseModel):
     internal_marks: float
     assignment_score: float
     lms_activity: float
+    competition_score: float = 0.0
 
 
 class StudentCreateRequest(BaseModel):
@@ -58,6 +59,7 @@ class StudentCreateRequest(BaseModel):
     internal_marks: Optional[float] = None
     assignment_score: Optional[float] = None
     lms_activity: Optional[float] = None
+    competition_score: Optional[float] = None
 
 
 # ── ML helpers ────────────────────────────────────────────────────────────────
@@ -104,6 +106,8 @@ def _get_interventions(record: AcademicRecord) -> list:
         suggestions.append("Complete pending assignments.")
     if (record.lms_activity or 0) < 40:
         suggestions.append("Increase LMS engagement.")
+    if (record.competition_score or 0) < 20:
+        suggestions.append("Participate in competitions and hackathons.")
     return suggestions
 
 
@@ -116,6 +120,7 @@ def _record_to_dict(record: AcademicRecord) -> dict:
         "internal_marks": record.internal_marks,
         "assignment_score": record.assignment_score,
         "lms_activity": record.lms_activity,
+        "competition_score": record.competition_score,
         "created_at": record.created_at.isoformat() if record.created_at else None,
     }
 
@@ -147,6 +152,7 @@ def _student_to_dict(profile: StudentProfile) -> dict:
             "internal_marks": latest.internal_marks,
             "assignment_score": latest.assignment_score,
             "lms_activity": latest.lms_activity,
+            "competition_score": latest.competition_score,
             "risk_score": prediction["risk_score"],
             "risk_level": prediction["risk_level"],
             "risk_drivers": prediction["risk_drivers"],
@@ -159,6 +165,7 @@ def _student_to_dict(profile: StudentProfile) -> dict:
             "internal_marks": None,
             "assignment_score": None,
             "lms_activity": None,
+            "competition_score": None,
             "risk_score": None,
             "risk_level": "Unknown",
             "risk_drivers": [],
@@ -319,6 +326,7 @@ def add_academic_record(
         internal_marks=data.internal_marks,
         assignment_score=data.assignment_score,
         lms_activity=data.lms_activity,
+        competition_score=data.competition_score,
     )
     db.add(record)
     db.commit()
@@ -396,6 +404,7 @@ def create_student(
             internal_marks=data.internal_marks or 0.0,
             assignment_score=data.assignment_score or 0.0,
             lms_activity=data.lms_activity or 0.0,
+            competition_score=data.competition_score or 0.0,
         )
         db.add(record)
 
@@ -567,19 +576,19 @@ def seed_students(
 
         # Create academic record based on risk tier
         if tier == "green":
-            att, im, asn, lms, ss = (
+            att, im, asn, lms = (
                 _rand(80, 100), _rand(70, 100), _rand(70, 100),
-                _rand(60, 100), _rand(0, 40),
+                _rand(60, 100),
             )
         elif tier == "yellow":
-            att, im, asn, lms, ss = (
+            att, im, asn, lms = (
                 _rand(65, 75), _rand(50, 65), _rand(50, 65),
-                _rand(40, 55), _rand(40, 70),
+                _rand(40, 55),
             )
         else:  # red
-            att, im, asn, lms, ss = (
+            att, im, asn, lms = (
                 _rand(40, 60), _rand(30, 50), _rand(30, 50),
-                _rand(20, 40), _rand(60, 100),
+                _rand(20, 40),
             )
 
         record = AcademicRecord(
@@ -589,7 +598,7 @@ def seed_students(
             internal_marks=im,
             assignment_score=asn,
             lms_activity=lms,
-            stress_score=ss,
+            competition_score=_rand(0, 50) if tier == "green" else _rand(0, 20) if tier == "yellow" else _rand(0, 10),
         )
         db.add(record)
 

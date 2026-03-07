@@ -6,6 +6,16 @@ import UserManagement from "./pages/UserManagement";
 import UploadRecords from "./pages/UploadRecords";
 import Attendance from "./pages/Attendance";
 import DefaultersReport from "./pages/DefaultersReport";
+import Competitions from "./pages/Competitions";
+import InternalMarks from "./pages/InternalMarks";
+import MyMarks from "./pages/MyMarks";
+import Assignments from "./pages/Assignments";
+import StudentAssignments from "./pages/StudentAssignments";
+import LeetCodeActivity from "./pages/LeetCodeActivity";
+import LeetCodeReview from "./pages/LeetCodeReview";
+import AdminDashboard from "./pages/AdminDashboard";
+import LeaveRequests from "./pages/LeaveRequests";
+import LeaveReview from "./pages/LeaveReview";
 import AdminLayout from "./layouts/AdminLayout";
 import HodLayout from "./layouts/HodLayout";
 import FacultyLayout from "./layouts/FacultyLayout";
@@ -62,7 +72,7 @@ export default function App() {
           </RequireAuth>
         }
       >
-        <Route path="dashboard" element={<Dashboard role="admin" user={getUser()} />} />
+        <Route path="dashboard" element={<AdminDashboard />} />
         <Route path="students" element={<StudentList role="admin" />} />
         <Route path="users" element={<UserManagement />} />
         <Route path="upload-records" element={<UploadRecords />} />
@@ -87,6 +97,11 @@ export default function App() {
         <Route path="upload-records" element={<UploadRecords />} />
         <Route path="attendance" element={<Attendance />} />
         <Route path="defaulters" element={<DefaultersReport />} />
+        <Route path="ia-marks" element={<InternalMarks />} />
+        <Route path="assignments" element={<Assignments />} />
+        <Route path="leetcode" element={<LeetCodeReview />} />
+        <Route path="competitions" element={<Competitions />} />
+        <Route path="leave-requests" element={<LeaveReview />} />
         <Route path="*" element={<Navigate to="/hod/dashboard" replace />} />
       </Route>
 
@@ -107,6 +122,11 @@ export default function App() {
         <Route path="upload-records" element={<UploadRecords />} />
         <Route path="attendance" element={<Attendance />} />
         <Route path="defaulters" element={<DefaultersReport />} />
+        <Route path="ia-marks" element={<InternalMarks />} />
+        <Route path="assignments" element={<Assignments />} />
+        <Route path="leetcode" element={<LeetCodeReview />} />
+        <Route path="competitions" element={<Competitions />} />
+        <Route path="leave-requests" element={<LeaveReview />} />
         <Route path="*" element={<Navigate to="/faculty/dashboard" replace />} />
       </Route>
 
@@ -122,6 +142,11 @@ export default function App() {
         }
       >
         <Route path="dashboard" element={<Dashboard role="student" user={getUser()} />} />
+        <Route path="marks" element={<MyMarks />} />
+        <Route path="assignments" element={<StudentAssignments />} />
+        <Route path="leetcode" element={<LeetCodeActivity />} />
+        <Route path="competitions" element={<Competitions />} />
+        <Route path="leave-requests" element={<LeaveRequests />} />
         <Route path="*" element={<Navigate to="/student/dashboard" replace />} />
       </Route>
 

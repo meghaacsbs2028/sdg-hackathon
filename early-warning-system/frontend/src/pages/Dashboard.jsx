@@ -3,19 +3,21 @@ import {
   LineChart, Line, XAxis, YAxis, CartesianGrid,
   Tooltip, ResponsiveContainer, ReferenceLine,
 } from "recharts";
-import { fetchMyStudentProfile, predictRisk } from "../services/api";
+import { fetchMyStudentProfile, predictRisk, fetchStudentAttendanceHistory } from "../services/api";
 import {
-  ClipboardList, FileText, FileCheck, Monitor, Brain,
+  ClipboardList, FileText, FileCheck, Monitor, Brain, Trophy,
   ShieldCheck, AlertTriangle, ShieldAlert, HelpCircle,
   LayoutDashboard, Search, Lightbulb, TrendingUp,
   Crosshair, Calendar, Inbox, Loader2, Flame,
 } from "lucide-react";
+import AttendanceHeatmap from "../components/AttendanceHeatmap";
 
 const fields = [
   { name: "attendance", label: "Attendance (%)", min: 50, max: 100, icon: <ClipboardList size={14} /> },
   { name: "internal_marks", label: "Internal Marks", min: 0, max: 100, icon: <FileText size={14} /> },
   { name: "assignment_score", label: "Assignment Score", min: 0, max: 100, icon: <FileCheck size={14} /> },
   { name: "lms_activity", label: "LMS Activity", min: 0, max: 100, icon: <Monitor size={14} /> },
+  { name: "competition_score", label: "Competition Score", min: 0, max: 100, icon: <Trophy size={14} /> },
 ];
 
 const riskConfig = {
@@ -27,12 +29,19 @@ const riskConfig = {
 /* ── Personal Dashboard for Student Role ──────────────────────────────────── */
 function PersonalDashboard() {
   const [student, setStudent] = useState(null);
+  const [history, setHistory] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
   useEffect(() => {
-    fetchMyStudentProfile()
-      .then((data) => setStudent(data))
+    Promise.all([
+      fetchMyStudentProfile(),
+      fetchStudentAttendanceHistory(90).catch(() => ({ history: [] }))
+    ])
+      .then(([profileData, historyData]) => {
+        setStudent(profileData);
+        setHistory(historyData.history || []);
+      })
       .catch((err) => {
         if (err.message.includes("fetch")) {
           setError("Unable to connect to server. Is the backend running?");
@@ -132,6 +141,7 @@ function PersonalDashboard() {
               { label: "Internal Marks", value: student.internal_marks, icon: <FileText size={18} />, color: "#2563eb" },
               { label: "Assignment", value: student.assignment_score, icon: <FileCheck size={18} />, color: "#7c3aed" },
               { label: "LMS Activity", value: student.lms_activity, icon: <Monitor size={18} />, color: "#0891b2" },
+              { label: "Competition", value: student.competition_score ?? 0, icon: <Trophy size={18} />, color: "#f59e0b" },
             ].map((m) => (
               <div key={m.label} style={pStyles.metricCard}>
                 <span style={{ ...pStyles.metricIcon, color: m.color }}>{m.icon}</span>
@@ -163,6 +173,11 @@ function PersonalDashboard() {
               </div>
             </div>
           )}
+
+          {/* Attendance Heatmap */}
+          <div style={{ marginBottom: "1rem" }}>
+            <AttendanceHeatmap history={history} days={90} />
+          </div>
 
           {/* Risk Drivers */}
           {student.risk_drivers?.length > 0 && (

@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { fetchStudents, fetchStudent, addAcademicRecord } from "../services/api";
+import { fetchStudents, fetchStudent, addAcademicRecord, fetchStudentAttendanceHistory } from "../services/api";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid,
   Tooltip, ResponsiveContainer, Cell,
@@ -9,6 +9,7 @@ import {
   Lightbulb, History, PlusCircle, X, Save, Loader2,
   AlertTriangle, CheckCircle, AlertCircle,
 } from "lucide-react";
+import AttendanceHeatmap from "../components/AttendanceHeatmap";
 
 const badgeColors = {
   Green:   { background: "#16a34a", color: "#fff" },
@@ -219,6 +220,13 @@ function StudentDetail({ student, onRecordAdded }) {
   });
   const [adding, setAdding] = useState(false);
   const [addMsg, setAddMsg] = useState("");
+  const [attendanceHistory, setAttendanceHistory] = useState([]);
+
+  useEffect(() => {
+    fetchStudentAttendanceHistory(90, student.id)
+      .then(res => setAttendanceHistory(res.history || []))
+      .catch(() => {});
+  }, [student.id]);
 
   const handleAddRecord = async (e) => {
     e.preventDefault();
@@ -256,6 +264,7 @@ function StudentDetail({ student, onRecordAdded }) {
               { label: "Internal Marks", value: student.internal_marks },
               { label: "Assignment Score", value: student.assignment_score },
               { label: "LMS Activity", value: student.lms_activity },
+              { label: "Competition", value: student.competition_score ?? 0 },
             ].map((m) => (
               <div key={m.label} style={detailStyles.metricCard}>
                 <span style={detailStyles.metricVal}>{m.value}</span>
@@ -346,6 +355,11 @@ function StudentDetail({ student, onRecordAdded }) {
           </button>
         </form>
       )}
+
+      {/* Attendance Heatmap */}
+      <div style={{ marginTop: "1rem", marginBottom: "1rem" }}>
+        <AttendanceHeatmap history={attendanceHistory} days={90} />
+      </div>
 
       {/* Academic History */}
       {history.length > 0 && (

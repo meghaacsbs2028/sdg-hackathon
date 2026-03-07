@@ -283,7 +283,7 @@ export default function DefaultersReport() {
                       )}
                     </td>
                     <td style={{ ...s.td, textAlign: "center" }}>
-                      <div style={{ display: "flex", alignItems: "center", gap: 5, justifyContent: "center",
+                      <div style={{ alignItems: "center", gap: 5, justifyContent: "center",
                         background: rCfg.bg, border: `1px solid ${rCfg.border}`, borderRadius: 10,
                         padding: "0.25rem 0.7rem", display: "inline-flex" }}>
                         <span style={{ color: rCfg.color }}>{rCfg.icon}</span>

@@ -4,7 +4,7 @@ import { fetchAttendance, saveAttendance, fetchAttendanceHistory } from "../serv
 import {
   CalendarDays, CheckCircle2, XCircle, Clock, Save, Loader2,
   Users, ChevronLeft, ChevronRight, AlertTriangle, ShieldCheck,
-  ShieldAlert, BookOpen, GraduationCap, LayoutGrid, ArrowRight, TrendingDown, Download, Edit3, Calendar, Sparkles,
+  ShieldAlert, BookOpen, GraduationCap, LayoutGrid, ArrowRight, TrendingDown, Download, Edit3, Calendar, Sparkles, Search,
 } from "lucide-react";
 
 /* ── Status config ──────────────────────────────────────────────────────── */
@@ -61,6 +61,7 @@ export default function Attendance() {
   const [saveResult, setSaveResult] = useState(null);
   const [exporting, setExporting] = useState(false);
   const [showCalendar, setShowCalendar] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
   const [calMonth, setCalMonth] = useState(() => { const d = new Date(); return { year: d.getFullYear(), month: d.getMonth() }; });
 
   // Step selections
@@ -400,6 +401,21 @@ export default function Attendance() {
                 </div>
               </div>
 
+              {/* Search Bar */}
+              <div style={s.searchBar}>
+                <Search size={16} style={{ color: "var(--gray-400)", flexShrink: 0 }} />
+                <input
+                  type="text"
+                  placeholder="Search by name or roll number..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  style={s.searchInput}
+                />
+                {searchQuery && (
+                  <button onClick={() => setSearchQuery("")} style={s.searchClear}>✕</button>
+                )}
+              </div>
+
               {/* Student Table */}
               <div style={s.tableWrapper}>
                 <table style={s.table}>
@@ -413,7 +429,11 @@ export default function Attendance() {
                     </tr>
                   </thead>
                   <tbody>
-                    {displayStudents.map((st, i) => {
+                    {displayStudents.filter(st => {
+                      if (!searchQuery) return true;
+                      const q = searchQuery.toLowerCase();
+                      return (st.name || "").toLowerCase().includes(q) || (st.roll_number || "").toLowerCase().includes(q);
+                    }).map((st, i) => {
                       const current = statuses[st.student_id];
                       const cfg = current ? STATUS_CONFIG[current] : null;
                       const pct = st.attendance_pct;
@@ -598,6 +618,9 @@ const s = {
   bulkGroup: { display:"flex", gap:"0.4rem", marginLeft:"auto" },
   bulkBtn: { display:"flex", alignItems:"center", gap:4, padding:"0.4rem 0.8rem", borderRadius:"var(--radius-md)", fontSize:"0.78rem", fontWeight:600, cursor:"pointer" },
 
+  searchBar: { display:"flex", alignItems:"center", gap:"0.55rem", padding:"0.55rem 0.85rem", background:"var(--white)", border:"1.5px solid var(--gray-200)", borderRadius:"var(--radius-md)", marginBottom:"0.75rem", transition:"border-color 0.2s" },
+  searchInput: { flex:1, border:"none", outline:"none", fontSize:"0.88rem", color:"var(--gray-800)", background:"transparent", padding:"0.2rem 0" },
+  searchClear: { background:"var(--gray-100)", border:"none", borderRadius:"50%", width:22, height:22, display:"flex", alignItems:"center", justifyContent:"center", cursor:"pointer", fontSize:"0.72rem", color:"var(--gray-500)", flexShrink:0 },
   tableWrapper: { background:"var(--white)", borderRadius:"var(--radius-lg)", border:"1px solid var(--gray-200)", boxShadow:"var(--shadow-sm)", overflow:"hidden", marginBottom:"1rem" },
   table: { width:"100%", borderCollapse:"collapse" },
   th: { padding:"0.7rem 1rem", textAlign:"left", fontSize:"0.72rem", fontWeight:700, color:"var(--gray-400)", textTransform:"uppercase", letterSpacing:"0.06em", background:"var(--gray-50)", borderBottom:"2px solid var(--gray-100)" },

@@ -33,6 +33,7 @@ class StudentInput(BaseModel):
     internal_marks: float
     assignment_score: float
     lms_activity: float
+    competition_score: float = 0.0
 
 
 def _compute_prediction(features_dict: dict) -> dict:
@@ -106,6 +107,7 @@ def predict_for_student(
         "internal_marks": latest.internal_marks,
         "assignment_score": latest.assignment_score,
         "lms_activity": latest.lms_activity,
+        "competition_score": latest.competition_score,
     }
 
     result = _compute_prediction(features)
@@ -113,4 +115,32 @@ def predict_for_student(
     result["term"] = latest.term
     result["record_id"] = latest.id
 
+    return result
+
+
+# ── Reusable helper for other routes ─────────────────────────────────────────
+def predict_and_save(student_id: int, db: Session):
+    """Re-run ML prediction for a student using latest AcademicRecord.
+
+    Called by attendance, IA marks, assignments, LeetCode, and competition routes
+    after they update a feature in AcademicRecord.
+    """
+    latest = (
+        db.query(AcademicRecord)
+        .filter(AcademicRecord.student_id == student_id)
+        .order_by(AcademicRecord.created_at.desc())
+        .first()
+    )
+    if not latest:
+        return None
+
+    features = {
+        "attendance": latest.attendance,
+        "internal_marks": latest.internal_marks,
+        "assignment_score": latest.assignment_score,
+        "lms_activity": latest.lms_activity,
+        "competition_score": latest.competition_score,
+    }
+
+    result = _compute_prediction(features)
     return result

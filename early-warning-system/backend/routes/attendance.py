@@ -360,8 +360,8 @@ def get_defaulters(
     }
 
 
-# ── GET /attendance/history ───────────────────────────────────────────────────
-@router.get("/history")
+# ── GET /attendance/class-history ──────────────────────────────────────────────
+@router.get("/class-history")
 def attendance_history(
     year: Optional[int] = None,
     section: Optional[str] = None,
@@ -489,5 +489,63 @@ def attendance_recent(
             "total_students": total_students,
             "pct": round((present / marked) * 100, 1) if marked else None,
         })
-
     return {"days": result, "total_students": total_students}
+
+
+# ── GET /attendance/history ───────────────────────────────────────────────────
+@router.get("/history")
+def get_attendance_history(
+    days: int = 90,
+    student_id: Optional[int] = None,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """
+    Fetch a single student's daily attendance history for the heatmap.
+    - Students can only see their own.
+    - Faculty/HOD/Admin can see any student in their scope if student_id is provided.
+    """
+    from datetime import datetime, timedelta
+
+    target_student_id = student_id
+
+    if current_user.role == "student":
+        profile = db.query(StudentProfile).filter(StudentProfile.user_id == current_user.id).first()
+        if not profile:
+            raise HTTPException(404, "Student profile not found")
+        # Students can only query themselves
+        target_student_id = profile.id
+    else:
+        if not target_student_id:
+            raise HTTPException(400, "student_id is required for faculty/admin requests")
+        
+        # Verify scope for faculty/hod
+        if current_user.role in ("faculty", "hod"):
+            target_profile = db.query(StudentProfile).filter(StudentProfile.id == target_student_id).first()
+            if not target_profile or target_profile.department_id != current_user.department_id:
+                raise HTTPException(403, "Student is not in your department")
+
+    # Fetch last N days of records
+    today = datetime.now().date()
+    start_date = today - timedelta(days=days)
+
+    records = (
+        db.query(DailyAttendance.date, DailyAttendance.status)
+        .filter(
+            DailyAttendance.student_id == target_student_id,
+            DailyAttendance.date >= start_date,
+            DailyAttendance.date <= today
+        )
+        .order_by(DailyAttendance.date.asc())
+        .all()
+    )
+
+    # Convert to list of dicts: [{date: "YYYY-MM-DD", status: "Present"}, ...]
+    history = [{"date": r.date.isoformat(), "status": r.status} for r in records]
+
+    return {
+        "student_id": target_student_id,
+        "days_requested": days,
+        "history": history
+    }
+

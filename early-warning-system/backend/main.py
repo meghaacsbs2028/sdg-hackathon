@@ -1,11 +1,19 @@
+import os
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 from routes.students import router as students_router
 from routes.predictions import router as predictions_router
 from routes.auth import router as auth_router
 from routes.users import router as users_router
 from routes.departments import router as departments_router
 from routes.attendance import router as attendance_router
+from routes.competitions import router as competitions_router
+from routes.internal_marks import router as internal_marks_router
+from routes.assignments import router as assignments_router
+from routes.leetcode import router as leetcode_router
+from routes.analytics import router as analytics_router
+from routes.leave_requests import router as leave_requests_router
 from database.db import engine, Base
 
 # Import all models so SQLAlchemy registers them
@@ -14,6 +22,11 @@ from models.user import User  # noqa: F401
 from models.student_profile import StudentProfile  # noqa: F401
 from models.academic_record import AcademicRecord  # noqa: F401
 from models.attendance import DailyAttendance  # noqa: F401
+from models.competition import CompetitionEntry  # noqa: F401
+from models.internal_mark import InternalMark  # noqa: F401
+from models.assignment import Assignment, AssignmentSubmission  # noqa: F401
+from models.leetcode_activity import LeetCodeProfile, ContestHistory  # noqa: F401
+from models.leave_request import LeaveRequest  # noqa: F401
 
 app = FastAPI(
     title="Early Warning Student Monitoring System API",
@@ -24,7 +37,7 @@ app = FastAPI(
 # Allow frontend (React dev server) to talk to backend
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", "http://localhost:5174"],
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -37,6 +50,17 @@ app.include_router(departments_router)
 app.include_router(students_router)
 app.include_router(predictions_router)
 app.include_router(attendance_router)
+app.include_router(competitions_router)
+app.include_router(internal_marks_router)
+app.include_router(assignments_router)
+app.include_router(leetcode_router)
+app.include_router(analytics_router)
+app.include_router(leave_requests_router)
+
+# Serve uploaded files
+_uploads_dir = os.path.join(os.path.dirname(__file__), "uploads")
+os.makedirs(_uploads_dir, exist_ok=True)
+app.mount("/uploads", StaticFiles(directory=_uploads_dir), name="uploads")
 
 
 # ── Department seed data ──────────────────────────────────────────────────────

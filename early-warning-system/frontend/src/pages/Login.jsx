@@ -56,7 +56,7 @@ export default function Login() {
         {/* Logo & Branding */}
         <div style={styles.brandSection}>
           <div style={styles.logoCircle}>
-            <img src="/favicon.png" alt="ScholarSafe Logo" width="72" height="56" />
+            <img src="/favicon.png" alt="ScholarSafe Logo" style={{ width: 40, height: 40, objectFit: "contain", borderRadius: "50%" }} />
           </div>
           <h1 style={styles.brandName}>ScholarSafe</h1>
           <p style={styles.brandTag}>AI-Powered Student Risk Intelligence</p>

@@ -28,5 +28,6 @@ class AcademicRecord(Base):
     internal_marks = Column(Float, nullable=False, default=0.0)
     assignment_score = Column(Float, nullable=False, default=0.0)
     lms_activity = Column(Float, nullable=False, default=0.0)
+    competition_score = Column(Float, nullable=False, default=0.0)
 
     created_at = Column(DateTime(timezone=True), server_default=func.now())

@@ -1,6 +1,6 @@
-# 🎓 Early Warning Student Monitoring System
+# 🎓 ScholarSafe — Early Warning Student Monitoring System
 
-An AI-powered system to identify at-risk students early using machine learning, built for the SDG Hackathon.
+An **AI-powered academic intelligence platform** that proactively identifies students at academic risk through multi-dimensional data analysis, built for **SDG 4 — Quality Education**.
 
 ---
 
@@ -12,6 +12,29 @@ An AI-powered system to identify at-risk students early using machine learning, 
 | Frontend | React 18 + Vite                     |
 | Database | MySQL 8 + SQLAlchemy                |
 | ML       | Scikit-learn (Logistic Regression)  |
+| Auth     | JWT Token-based authentication      |
+
+---
+
+## ✨ Key Features
+
+| Feature | Description |
+|---------|-------------|
+| 🤖 **ML Risk Prediction** | Auto-predicts Green/Yellow/Red risk levels after every data entry |
+| 📊 **Multi-dimensional Analysis** | Attendance, internal marks, assignments, LMS activity |
+| 👥 **Role-Based Access** | Admin → HOD → Faculty → Student hierarchy with department scoping |
+| 📅 **Daily Attendance Tracking** | Calendar-based marking with history editing |
+| 🔥 **Streak Counter** | Gamified attendance streaks for student engagement |
+| 📈 **Progress Bars** | Visual attendance percentage bars in tables |
+| ✨ **Animated Marking** | Satisfying pop/shake animations when marking attendance |
+| 📋 **Defaulters Report** | Auto-identify students below attendance threshold |
+| 📥 **CSV Bulk Upload** | Import academic records and users via CSV |
+| 📤 **CSV Export** | Download attendance reports as CSV |
+| 🎯 **Personalized Interventions** | Auto-generated suggestions based on risk drivers |
+| 📉 **Performance Trends** | Line charts showing student progress over terms |
+| 🔍 **Advanced Filters & Sorting** | Search, filter by role/dept/year/section, sortable columns |
+| ✏️ **Edit User Profiles** | Modal form with role-based access control |
+| 🔐 **Access Control** | Faculty can't edit HODs, HODs can't edit Admins |
 
 ---
 
@@ -20,28 +43,49 @@ An AI-powered system to identify at-risk students early using machine learning, 
 ```
 early-warning-system/
 ├── backend/
-│   ├── main.py                ← FastAPI entry point (CORS, startup)
-│   ├── requirements.txt       ← Python dependencies
-│   ├── .env                   ← DB credentials (gitignored)
-│   ├── database/db.py         ← SQLAlchemy engine & session
-│   ├── models/student.py      ← Student ORM model
+│   ├── main.py                  ← FastAPI entry point
+│   ├── requirements.txt         ← Python dependencies
+│   ├── .env                     ← DB credentials (gitignored)
+│   ├── database/db.py           ← SQLAlchemy engine & session
+│   ├── auth/
+│   │   ├── dependencies.py      ← JWT auth + role guards
+│   │   └── utils.py             ← Password hashing + token creation
+│   ├── models/
+│   │   ├── user.py              ← User model (admin/hod/faculty/student)
+│   │   ├── student_profile.py   ← Student profile with department
+│   │   ├── academic_record.py   ← Per-term academic metrics
+│   │   ├── attendance.py        ← Daily attendance records
+│   │   └── department.py        ← Department model
 │   ├── routes/
-│   │   ├── students.py        ← GET/POST /students, POST /students/seed
-│   │   └── predictions.py     ← POST /predictions/predict
+│   │   ├── auth.py              ← Login / register
+│   │   ├── users.py             ← User CRUD + CSV upload
+│   │   ├── students.py          ← Student profiles + academic records
+│   │   ├── attendance.py        ← Daily attendance + streak calculation
+│   │   ├── departments.py       ← Department management
+│   │   └── predictions.py       ← Manual risk prediction
 │   └── ml/
-│       ├── model.py           ← RiskPredictor class
-│       ├── train_model.py     ← Training script
-│       └── risk_model.pkl     ← Saved model (gitignored)
+│       ├── train_model.py       ← Model training script
+│       ├── students_dataset.csv ← Training data
+│       └── risk_model.pkl       ← Saved model (gitignored)
 │
 └── frontend/
     ├── vite.config.js
     └── src/
-        ├── App.jsx            ← Tab navigation (Dashboard / Student List)
+        ├── App.jsx              ← Routing for all roles
         ├── components/Navbar.jsx
+        ├── layouts/
+        │   ├── AdminLayout.jsx  ← Admin portal layout
+        │   ├── HodLayout.jsx    ← HOD portal layout
+        │   ├── FacultyLayout.jsx← Faculty portal layout
+        │   └── StudentLayout.jsx← Student portal layout
         ├── pages/
-        │   ├── Dashboard.jsx  ← Risk prediction form
-        │   └── StudentList.jsx← Student table + chart + interventions
-        └── services/api.js
+        │   ├── Login.jsx        ← Authentication page
+        │   ├── Dashboard.jsx    ← Student dashboard + risk prediction
+        │   ├── Attendance.jsx   ← Mark/edit daily attendance
+        │   ├── StudentList.jsx  ← Student records + academic history
+        │   ├── DefaultersReport.jsx ← Low-attendance report
+        │   └── UserManagement.jsx   ← Admin user CRUD with filters
+        └── services/api.js      ← All API calls
 ```
 
 ---
@@ -49,8 +93,6 @@ early-warning-system/
 ## 🚀 Getting Started (New Team Member Setup)
 
 ### Prerequisites
-
-Make sure you have installed:
 
 - **Python 3.10+** → [python.org/downloads](https://www.python.org/downloads/)
 - **Node.js 18+** → [nodejs.org](https://nodejs.org/)
@@ -62,7 +104,7 @@ Make sure you have installed:
 ### 1️⃣ Clone the Repository
 
 ```bash
-git clone https://github.com/<your-username>/sdg-hackathon.git
+git clone https://github.com/meghaacsbs2028/sdg-hackathon.git
 cd sdg-hackathon/early-warning-system
 ```
 
@@ -90,8 +132,6 @@ pip install -r requirements.txt
 
 > ⚠️ This file is **gitignored** — each team member must create it manually.
 
-Create a file at `backend/.env` with:
-
 ```env
 DATABASE_URL=mysql+pymysql://root:<YOUR_MYSQL_PASSWORD>@localhost:3306/early_warning_db
 SECRET_KEY=changeme-in-production
@@ -107,19 +147,17 @@ Replace `<YOUR_MYSQL_PASSWORD>` with your MySQL root password.
 mysql -u root -p -e "CREATE DATABASE IF NOT EXISTS early_warning_db;"
 ```
 
-(Enter your MySQL password when prompted.)
-
 ---
 
 ### 5️⃣ Train the ML Model
 
-The `.pkl` model file is gitignored, so you must generate it locally:
+The `.pkl` model file is gitignored, so you must generate it:
 
 ```bash
 python ml/train_model.py
 ```
 
-✅ Should print **"Model Accuracy: ~97%"** and create `backend/ml/risk_model.pkl`.
+✅ Should print accuracy metrics and create `ml/risk_model.pkl`.
 
 ---
 
@@ -129,10 +167,7 @@ python ml/train_model.py
 .\venv\Scripts\uvicorn main:app --reload --port 8000
 ```
 
-✅ Should show **"Application startup complete"**
-
-- API docs: **http://localhost:8000/docs**
-- Health check: **http://localhost:8000/health**
+✅ API docs available at **http://localhost:8000/docs**
 
 ---
 
@@ -140,31 +175,11 @@ python ml/train_model.py
 
 ```bash
 cd frontend
-
-# Install npm packages
 npm install
-
-# Start dev server
 npm run dev
 ```
 
-✅ App runs at **http://localhost:5174**
-
----
-
-### 8️⃣ Seed Sample Data
-
-Populate the database with 30 sample students (12 Green, 9 Yellow, 9 Red):
-
-**Option A — Using the Swagger UI:**
-1. Go to http://localhost:8000/docs
-2. Find **POST /students/seed**
-3. Click "Try it out" → Execute
-
-**Option B — Using terminal:**
-```bash
-curl -X POST http://localhost:8000/students/seed
-```
+✅ App runs at **http://localhost:5173** (or next available port)
 
 ---
 
@@ -172,7 +187,7 @@ curl -X POST http://localhost:8000/students/seed
 
 ```bash
 # Clone & navigate
-git clone https://github.com/<your-username>/sdg-hackathon.git
+git clone https://github.com/meghaacsbs2028/sdg-hackathon.git
 cd sdg-hackathon/early-warning-system
 
 # ── Backend ──────────────────────────────
@@ -180,7 +195,7 @@ cd backend
 python -m venv venv
 .\venv\Scripts\activate
 pip install -r requirements.txt
-# ⚠️ Create backend/.env (see README Step 3)
+# ⚠️ Create backend/.env (see Step 3 above)
 mysql -u root -p -e "CREATE DATABASE IF NOT EXISTS early_warning_db;"
 python ml/train_model.py
 .\venv\Scripts\uvicorn main:app --reload --port 8000
@@ -193,9 +208,36 @@ npm run dev
 
 ---
 
+## 🤝 Collaboration Workflow
+
+### Branching Strategy
+
+```bash
+# Always create a feature branch
+git checkout -b feature/your-feature-name
+
+# Make your changes, then commit
+git add .
+git commit -m "Add: brief description of change"
+
+# Push your branch
+git push origin feature/your-feature-name
+
+# Create a Pull Request on GitHub to merge into main
+```
+
+### Rules
+
+1. **Never push directly to `main`** — always use Pull Requests
+2. **Create `.env` locally** — never commit secrets
+3. **Train model locally** — run `python ml/train_model.py` after cloning
+4. **Test before pushing** — run `npm run build` for frontend checks
+
+---
+
 ## 🧠 ML Model Details
 
-Uses **Logistic Regression** to predict student dropout risk based on 5 features:
+Uses **Logistic Regression** to predict student dropout risk:
 
 | Feature            | Description                     |
 |--------------------|---------------------------------|
@@ -203,29 +245,35 @@ Uses **Logistic Regression** to predict student dropout risk based on 5 features
 | `internal_marks`   | Internal exam score (0–100)     |
 | `assignment_score` | Assignment completion (0–100)   |
 | `lms_activity`     | LMS engagement score (0–100)    |
-| `stress_score`     | Self-reported stress (0–100)    |
 
-**Risk levels:**
+**Risk Levels:**
 
-| Probability | Level  | Action        |
-|-------------|--------|---------------|
-| < 0.4       | 🟢 Green  | Safe          |
-| 0.4 – 0.7  | 🟡 Yellow | Monitor       |
-| > 0.7       | 🔴 Red    | Intervene     |
+| Probability | Level       | Action    |
+|-------------|-------------|-----------|
+| < 0.4       | 🟢 Green   | Safe      |
+| 0.4 – 0.7  | 🟡 Yellow  | Monitor   |
+| > 0.7       | 🔴 Red     | Intervene |
 
 ---
 
 ## 📡 API Endpoints
 
-| Method | Endpoint               | Description                          |
-|--------|------------------------|--------------------------------------|
-| GET    | `/`                    | Health message                       |
-| GET    | `/health`              | Health check                         |
-| GET    | `/students`            | All students + ML risk predictions   |
-| GET    | `/students/{id}`       | Single student + prediction          |
-| POST   | `/students`            | Create a new student                 |
-| POST   | `/students/seed`       | Seed 30 sample students              |
-| POST   | `/predictions/predict` | Predict risk from manual input       |
+| Method | Endpoint                     | Description                         |
+|--------|------------------------------|-------------------------------------|
+| POST   | `/auth/login`                | Login, returns JWT token            |
+| GET    | `/users`                     | List all users (role-filtered)      |
+| POST   | `/users`                     | Create user                         |
+| PUT    | `/users/{id}`                | Update user details                 |
+| DELETE | `/users/{id}`                | Delete user                         |
+| GET    | `/students`                  | All students + risk predictions     |
+| GET    | `/students/me`               | Current student's dashboard data    |
+| GET    | `/students/{id}`             | Single student detail               |
+| POST   | `/students/{id}/records`     | Add academic record                 |
+| GET    | `/attendance?date=YYYY-MM-DD`| Get attendance for a date           |
+| POST   | `/attendance`                | Save/update bulk attendance         |
+| GET    | `/attendance/history`        | Attendance history for reports      |
+| GET    | `/departments`               | List departments                    |
+| POST   | `/predictions/predict`       | Manual risk prediction              |
 
 ---
 
@@ -237,4 +285,4 @@ This project targets **SDG 4 — Quality Education** by helping educational inst
 
 ## 👥 Team
 
-Built for the SDG Hackathon 2026.
+Built for the **SDG Hackathon 2026**.
